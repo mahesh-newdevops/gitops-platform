@@ -1,0 +1,168 @@
+name: Platform Add-ons
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Apply or destroy selected add-ons
+        required: true
+        default: apply
+        type: choice
+        options:
+          - apply
+          - destroy
+      environment:
+        description: Environment name
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      aws_region:
+        description: AWS region
+        required: true
+        default: ap-south-1
+        type: string
+      cluster_name:
+        description: EKS cluster name
+        required: true
+        default: dev-platform-eks
+        type: string
+      aws_load_balancer_controller:
+        description: Include AWS Load Balancer Controller
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      prometheus:
+        description: Include Prometheus stack
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      loki:
+        description: Include Loki stack
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      metrics_server:
+        description: Include metrics-server
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      cert_manager:
+        description: Include cert-manager
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      external_dns:
+        description: Include external-dns
+        required: true
+        default: "false"
+        type: choice
+        options: ["true", "false"]
+      external_secrets:
+        description: Include external-secrets
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      kyverno:
+        description: Include Kyverno
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      trivy_operator:
+        description: Include Trivy Operator
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      reloader:
+        description: Include Reloader
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      karpenter:
+        description: Include Karpenter controller
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      karpenter_manifests:
+        description: Include Karpenter EC2NodeClass and NodePool
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+      istio:
+        description: Include optional Istio add-ons
+        required: true
+        default: "false"
+        type: choice
+        options: ["true", "false"]
+
+jobs:
+  addons:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ inputs.aws_region }}
+      ADDON_AWS_LOAD_BALANCER_CONTROLLER: ${{ inputs.aws_load_balancer_controller }}
+      ADDON_PROMETHEUS: ${{ inputs.prometheus }}
+      ADDON_LOKI: ${{ inputs.loki }}
+      ADDON_METRICS_SERVER: ${{ inputs.metrics_server }}
+      ADDON_CERT_MANAGER: ${{ inputs.cert_manager }}
+      ADDON_EXTERNAL_DNS: ${{ inputs.external_dns }}
+      ADDON_EXTERNAL_SECRETS: ${{ inputs.external_secrets }}
+      ADDON_KYVERNO: ${{ inputs.kyverno }}
+      ADDON_TRIVY_OPERATOR: ${{ inputs.trivy_operator }}
+      ADDON_RELOADER: ${{ inputs.reloader }}
+      ADDON_KARPENTER: ${{ inputs.karpenter }}
+      ADDON_KARPENTER_MANIFESTS: ${{ inputs.karpenter_manifests }}
+      ADDON_ISTIO: ${{ inputs.istio }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TERRAFORMAWS }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-actions-platform-addons
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --region "${AWS_REGION}" --name "${{ inputs.cluster_name }}"
+
+      - name: Render selected add-ons
+        run: |
+          set -euo pipefail
+          python3 scripts/render-addons.py --action "${{ inputs.action }}" > /tmp/platform-addons.txt
+          cat /tmp/platform-addons.txt
+
+      - name: Apply selected add-ons
+        if: inputs.action == 'apply'
+        run: |
+          set -euo pipefail
+          while IFS= read -r manifest; do
+            kubectl apply -f "${manifest}"
+          done < /tmp/platform-addons.txt
+
+      - name: Destroy selected add-ons
+        if: inputs.action == 'destroy'
+        run: |
+          set -euo pipefail
+          while IFS= read -r manifest; do
+            kubectl delete -f "${manifest}" --ignore-not-found=true
+          done < /tmp/platform-addons.txt

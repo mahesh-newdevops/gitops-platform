@@ -1,0 +1,12 @@
+cluster:
+  name: __EKS_CLUSTER_NAME__
+  region: __AWS_REGION__
+  vpcId: __VPC_ID__
+  domainFilter: example.com
+  karpenterInterruptionQueue: __KARPENTER_INTERRUPTION_QUEUE__
+  serviceAccountRoles:
+    awsLoadBalancerController: __AWS_LOAD_BALANCER_CONTROLLER_ROLE_ARN__
+    externalDns: __EXTERNAL_DNS_ROLE_ARN__
+    externalSecrets: __EXTERNAL_SECRETS_ROLE_ARN__
+    karpenterController: __KARPENTER_CONTROLLER_ROLE_ARN__
+    karpenterNode: __KARPENTER_NODE_ROLE_NAME__

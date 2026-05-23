@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: istio-addons
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - list:
+        elements:
+          - name: istio-base
+            namespace: istio-system
+            chart: base
+            targetRevision: 1.22.1
+          - name: istiod
+            namespace: istio-system
+            chart: istiod
+            targetRevision: 1.22.1
+          - name: istio-ingressgateway
+            namespace: istio-ingress
+            chart: gateway
+            targetRevision: 1.22.1
+  template:
+    metadata:
+      name: '{{ .name }}'
+      labels:
+        app.kubernetes.io/part-of: platform-addons
+        platform.addons/optional: "true"
+    spec:
+      project: default
+      source:
+        repoURL: https://istio-release.storage.googleapis.com/charts
+        chart: '{{ .chart }}'
+        targetRevision: '{{ .targetRevision }}'
+        helm:
+          releaseName: '{{ .name }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+

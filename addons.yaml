@@ -1,0 +1,31 @@
+# Enable or disable platform add-ons here.
+#
+# The GitHub Actions workflow reads this file and applies only enabled add-ons.
+# The ArgoCD ApplicationSet also reads this file through the git files generator.
+addons:
+  aws_load_balancer_controller:
+    enabled: true
+  prometheus:
+    enabled: true
+  loki:
+    enabled: true
+  metrics_server:
+    enabled: true
+  cert_manager:
+    enabled: true
+  external_dns:
+    enabled: false
+  external_secrets:
+    enabled: true
+  kyverno:
+    enabled: true
+  trivy_operator:
+    enabled: true
+  reloader:
+    enabled: true
+  karpenter:
+    enabled: true
+  istio:
+    enabled: false
+  karpenter_manifests:
+    enabled: true
