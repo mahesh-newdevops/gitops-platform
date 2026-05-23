@@ -108,6 +108,12 @@ on:
         default: "false"
         type: choice
         options: ["true", "false"]
+      microservices_apps_deploy:
+        description: Include microservices application workloads
+        required: true
+        default: "true"
+        type: choice
+        options: ["true", "false"]
 
 jobs:
   addons:
@@ -130,6 +136,7 @@ jobs:
       ADDON_KARPENTER: ${{ inputs.karpenter }}
       ADDON_KARPENTER_MANIFESTS: ${{ inputs.karpenter_manifests }}
       ADDON_ISTIO: ${{ inputs.istio }}
+      ADDON_MICROSERVICES_APPS_DEPLOY: ${{ inputs.microservices_apps_deploy }}
 
     steps:
       - name: Checkout

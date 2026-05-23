@@ -29,3 +29,5 @@ addons:
     enabled: false
   karpenter_manifests:
     enabled: true
+  microservices_apps_deploy:
+    enabled: true

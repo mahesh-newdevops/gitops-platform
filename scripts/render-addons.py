@@ -18,6 +18,7 @@ ADDONS = {
     "karpenter": "argocd/apps/karpenter.yaml",
     "istio": "argocd/optional/istio-applicationset.yaml",
     "karpenter_manifests": "argocd/apps/karpenter-manifests-application.yaml",
+    "microservices_apps_deploy": "argocd/apps/microservices-apps-deploy.yaml",
 }
 
 ENV_OVERRIDES = {
@@ -34,6 +35,7 @@ ENV_OVERRIDES = {
     "karpenter": "ADDON_KARPENTER",
     "istio": "ADDON_ISTIO",
     "karpenter_manifests": "ADDON_KARPENTER_MANIFESTS",
+    "microservices_apps_deploy": "ADDON_MICROSERVICES_APPS_DEPLOY",
 }
 
 

@@ -31,6 +31,7 @@ Enabled by default in `addons.yaml`:
 - `reloader`
 - `karpenter` controller
 - Karpenter `EC2NodeClass` and `NodePool` manifests
+- `microservices-apps-deploy` application workload reference
 
 Disabled by default:
 
@@ -62,8 +63,19 @@ Inputs:
 - `aws_region`
 - `cluster_name`
 - one `true` or `false` option per add-on
+- `microservices_apps_deploy`: include or exclude the EKS application workload ArgoCD reference
 
-The workflow applies or deletes the selected ArgoCD `Application` manifests. ArgoCD then installs, reconciles, or prunes the actual Helm releases and Karpenter manifests.
+The workflow applies or deletes the selected ArgoCD `Application` manifests. ArgoCD then installs, reconciles, or prunes the actual Helm releases, Karpenter manifests, and optional application workloads.
+
+## EKS Application Workloads
+
+`argocd/apps/microservices-apps-deploy.yaml` references:
+
+```text
+https://github.com/mahesh-newdevops/microservices-apps-deploy.git
+```
+
+When `bootstrap/root-app.yaml` syncs `argocd/apps`, ArgoCD creates this application reference and then follows the app repo's own ArgoCD structure.
 
 ## Required Placeholders
 
