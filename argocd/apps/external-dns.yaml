@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: external-dns
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
     app.kubernetes.io/part-of: platform-addons
 spec:
@@ -19,7 +21,7 @@ spec:
         policy: sync
         txtOwnerId: __EKS_CLUSTER_NAME__
         domainFilters:
-          - example.com
+          - __DOMAIN_FILTER__
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: __EXTERNAL_DNS_ROLE_ARN__
@@ -33,4 +35,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-

@@ -9,6 +9,7 @@ gitops-platform/
 ├── .github/workflows/platform-addons.yml
 ├── addons.yaml
 ├── bootstrap/root-app.yaml
+├── argocd/kustomization.yaml
 ├── argocd/apps/
 ├── argocd/optional/
 ├── addons/karpenter/manifests/
@@ -75,21 +76,21 @@ The workflow applies or deletes the selected ArgoCD `Application` manifests. Arg
 https://github.com/mahesh-newdevops/microservices-apps-deploy.git
 ```
 
-When `bootstrap/root-app.yaml` syncs `argocd/apps`, ArgoCD creates this application reference and then follows the app repo's own ArgoCD structure.
+When `bootstrap/root-app.yaml` syncs `argocd`, ArgoCD creates this application reference and then follows the app repo's own ArgoCD structure.
 
-## Required Placeholders
+## Optional Placeholder Rendering
 
-Replace placeholders before applying:
+The default `argocd/kustomization.yaml` path is ready for the `dev-platform-eks` cluster. The rendering workflow can still replace placeholders when you enable optional add-ons or target another cluster:
 
 - `__EKS_CLUSTER_NAME__`
 - `__AWS_REGION__`
 - `__VPC_ID__`
-- `__AWS_LOAD_BALANCER_CONTROLLER_ROLE_ARN__`
+- `__DOMAIN_FILTER__`
 - `__EXTERNAL_DNS_ROLE_ARN__`
-- `__EXTERNAL_SECRETS_ROLE_ARN__`
-- `__KARPENTER_CONTROLLER_ROLE_ARN__`
 - `__KARPENTER_INTERRUPTION_QUEUE__`
 - `__KARPENTER_NODE_ROLE_NAME__`
+
+The AWS Load Balancer Controller, External Secrets, and Karpenter controller use EKS Pod Identity roles created by the EKS platform Terraform.
 
 ## Optional Istio
 

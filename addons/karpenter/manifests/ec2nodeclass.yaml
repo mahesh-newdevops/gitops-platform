@@ -4,14 +4,13 @@ metadata:
   name: default
 spec:
   amiFamily: AL2023
-  role: __KARPENTER_NODE_ROLE_NAME__
+  role: dev-platform-eks-karpenter-node
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: __EKS_CLUSTER_NAME__
+        karpenter.sh/discovery: dev-platform-eks
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: __EKS_CLUSTER_NAME__
+        karpenter.sh/discovery: dev-platform-eks
   tags:
-    karpenter.sh/discovery: __EKS_CLUSTER_NAME__
+    karpenter.sh/discovery: dev-platform-eks
     managed-by: argocd
-

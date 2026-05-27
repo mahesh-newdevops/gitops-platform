@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: karpenter
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
     app.kubernetes.io/part-of: platform-addons
 spec:
@@ -15,11 +17,8 @@ spec:
       releaseName: karpenter
       values: |
         settings:
-          clusterName: __EKS_CLUSTER_NAME__
-          interruptionQueue: __KARPENTER_INTERRUPTION_QUEUE__
-        serviceAccount:
-          annotations:
-            eks.amazonaws.com/role-arn: __KARPENTER_CONTROLLER_ROLE_ARN__
+          clusterName: dev-platform-eks
+          interruptionQueue: dev-platform-eks-karpenter-interruptions
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

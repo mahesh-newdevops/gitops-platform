@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: aws-load-balancer-controller
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
   labels:
     app.kubernetes.io/part-of: platform-addons
 spec:
@@ -14,14 +16,11 @@ spec:
     helm:
       releaseName: aws-load-balancer-controller
       values: |
-        clusterName: __EKS_CLUSTER_NAME__
-        region: __AWS_REGION__
-        vpcId: __VPC_ID__
+        clusterName: dev-platform-eks
+        region: ap-south-1
         serviceAccount:
           create: true
           name: aws-load-balancer-controller
-          annotations:
-            eks.amazonaws.com/role-arn: __AWS_LOAD_BALANCER_CONTROLLER_ROLE_ARN__
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
@@ -32,4 +31,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-

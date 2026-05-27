@@ -30,6 +30,31 @@ on:
         required: true
         default: dev-platform-eks
         type: string
+      vpc_id:
+        description: VPC ID for AWS Load Balancer Controller. Leave empty to read it from EKS.
+        required: false
+        default: ""
+        type: string
+      domain_filter:
+        description: Route 53 domain filter for external-dns
+        required: false
+        default: ""
+        type: string
+      external_dns_role_arn:
+        description: IAM role ARN for external-dns service account
+        required: false
+        default: ""
+        type: string
+      karpenter_interruption_queue:
+        description: SQS interruption queue name for Karpenter
+        required: false
+        default: ""
+        type: string
+      karpenter_node_role_name:
+        description: IAM role name used by Karpenter EC2 nodes
+        required: false
+        default: ""
+        type: string
       aws_load_balancer_controller:
         description: Include AWS Load Balancer Controller
         required: true
@@ -123,6 +148,12 @@ jobs:
       contents: read
     env:
       AWS_REGION: ${{ inputs.aws_region }}
+      EKS_CLUSTER_NAME: ${{ inputs.cluster_name }}
+      VPC_ID: ${{ inputs.vpc_id }}
+      DOMAIN_FILTER: ${{ inputs.domain_filter }}
+      EXTERNAL_DNS_ROLE_ARN: ${{ inputs.external_dns_role_arn || secrets.EXTERNAL_DNS_ROLE_ARN }}
+      KARPENTER_INTERRUPTION_QUEUE: ${{ inputs.karpenter_interruption_queue || secrets.KARPENTER_INTERRUPTION_QUEUE }}
+      KARPENTER_NODE_ROLE_NAME: ${{ inputs.karpenter_node_role_name || secrets.KARPENTER_NODE_ROLE_NAME }}
       ADDON_AWS_LOAD_BALANCER_CONTROLLER: ${{ inputs.aws_load_balancer_controller }}
       ADDON_PROMETHEUS: ${{ inputs.prometheus }}
       ADDON_LOKI: ${{ inputs.loki }}
@@ -152,10 +183,32 @@ jobs:
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region "${AWS_REGION}" --name "${{ inputs.cluster_name }}"
 
+      - name: Resolve cluster-derived values
+        run: |
+          set -euo pipefail
+          if [ -z "${VPC_ID}" ]; then
+            VPC_ID="$(aws eks describe-cluster \
+              --region "${AWS_REGION}" \
+              --name "${EKS_CLUSTER_NAME}" \
+              --query 'cluster.resourcesVpcConfig.vpcId' \
+              --output text)"
+            echo "VPC_ID=${VPC_ID}" >> "${GITHUB_ENV}"
+          fi
+          if [ -z "${KARPENTER_INTERRUPTION_QUEUE}" ]; then
+            echo "KARPENTER_INTERRUPTION_QUEUE=${EKS_CLUSTER_NAME}-karpenter-interruptions" >> "${GITHUB_ENV}"
+          fi
+          if [ -z "${KARPENTER_NODE_ROLE_NAME}" ]; then
+            echo "KARPENTER_NODE_ROLE_NAME=${EKS_CLUSTER_NAME}-karpenter-node" >> "${GITHUB_ENV}"
+          fi
+
       - name: Render selected add-ons
         run: |
           set -euo pipefail
-          python3 scripts/render-addons.py --action "${{ inputs.action }}" > /tmp/platform-addons.txt
+          if [ "${{ inputs.action }}" = "apply" ]; then
+            python3 scripts/render-addons.py --action apply --output-dir /tmp/platform-addons-rendered > /tmp/platform-addons.txt
+          else
+            python3 scripts/render-addons.py --action destroy > /tmp/platform-addons.txt
+          fi
           cat /tmp/platform-addons.txt
 
       - name: Apply selected add-ons

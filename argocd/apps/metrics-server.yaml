@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: metrics-server
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
   labels:
     app.kubernetes.io/part-of: platform-addons
 spec:
@@ -23,4 +25,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-
